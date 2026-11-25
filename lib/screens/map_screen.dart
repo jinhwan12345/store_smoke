@@ -8,11 +8,9 @@ import '../models/district_region.dart';
 import '../models/smoking_area.dart';
 import '../services/location_service.dart';
 import '../services/smoking_area_service.dart';
-import '../services/update_service.dart';
 import '../theme/sketch_theme.dart';
 import '../widgets/status_banner.dart';
 import '../widgets/area_detail_sheet.dart';
-import '../widgets/update_dialog.dart';
 import '../widgets/sketch_widgets.dart';
 
 enum AreaFilterType {
@@ -130,7 +128,6 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     _areaService.loadAllDistrictCounts();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchVisibleAreas();
-      _checkAppUpdate();
     });
   }
 
@@ -161,17 +158,6 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       }
     } finally {
       _isFetchingNearby = false;
-    }
-  }
-
-  Future<void> _checkAppUpdate() async {
-    final updateInfo = await UpdateService.checkForUpdate();
-    if (updateInfo != null && mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => UpdateDialog(updateInfo: updateInfo),
-      );
     }
   }
 
@@ -837,7 +823,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.example.smoke_finder',
+          userAgentPackageName: 'org.youthdrawer.smokefinder',
           tileProvider: NetworkTileProvider(),
           tileBuilder: (context, tileWidget, tile) {
             return ColorFiltered(

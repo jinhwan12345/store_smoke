@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android Release (AAB & APK)
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -32,12 +33,44 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Configure Release Keystore (if secrets are set)
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_STORE_PASSWORD" ] && [ -n "$ANDROID_KEY_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            cat <<EOF > android/key.properties
+          storePassword=$ANDROID_STORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+            echo "HAS_RELEASE_KEYSTORE=true" >> $GITHUB_ENV
+          else
+            echo "HAS_RELEASE_KEYSTORE=false" >> $GITHUB_ENV
+          fi
+
       - name: Install Dependencies
         run: |
           flutter config --no-analytics
           flutter pub get
 
-      # GitHub 실행 번호(run_number)를 기반으로 버전명과 빌드 번호를 자동 증가시켜 빌드
+      # Play 스토어 제출용 AAB 빌드 (릴리즈 키스토어 시크릿이 등록된 경우)
+      - name: Build Android App Bundle (AAB)
+        if: env.HAS_RELEASE_KEYSTORE == 'true'
+        run: flutter build appbundle --release --no-tree-shake-icons --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
+
+      - name: Upload AAB Artifact (Google Play)
+        if: env.HAS_RELEASE_KEYSTORE == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-store-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
+      # 테스트 설치용 APK 빌드
       - name: Build Android APK
         run: flutter build apk --release --no-tree-shake-icons --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
 
@@ -46,15 +79,3 @@ jobs:
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-
-      # main 브랜치 푸시 시 GitHub Releases에 최신 APK 자동 등록 (앱 내 자동 업데이트용)
-      - name: Publish GitHub Release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: v1.0.${{ github.run_number }}
-          body: v1.0.${{ github.run_number }}
-          files: build/app/outputs/flutter-apk/app-release.apk
-          draft: false
-          prerelease: false

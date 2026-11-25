@@ -4,13 +4,23 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+import java.util.Properties
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { stream ->
+        keystoreProperties.load(stream)
+    }
+}
+
 def githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")
 def computedVersionCode = githubRunNumber ? githubRunNumber.toInteger() : flutter.versionCode
 def computedVersionName = githubRunNumber ? "1.0.${githubRunNumber}" : flutter.versionName
 
 android {
-    namespace = "com.example.smoke_finder"
-    compileSdk = flutter.compileSdkVersion
+    namespace = "org.youthdrawer.smokefinder"
+    compileSdk = 35
     ndkVersion = "25.1.8937393"
 
     compileOptions {
@@ -23,9 +33,9 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.smoke_finder"
+        applicationId = "org.youthdrawer.smokefinder"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 35
         versionCode = computedVersionCode
         versionName = computedVersionName
     }
@@ -37,11 +47,21 @@ android {
             storeFile file('debug.keystore')
             storePassword 'android'
         }
+        if (keystorePropertiesFile.exists()) {
+            release {
+                keyAlias keystoreProperties.getProperty('keyAlias')
+                keyPassword keystoreProperties.getProperty('keyPassword')
+                storeFile file(keystoreProperties.getProperty('storeFile'))
+                storePassword keystoreProperties.getProperty('storePassword')
+            }
+        }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug
+            signingConfig = keystorePropertiesFile.exists()
+                ? signingConfigs.release
+                : signingConfigs.debug
         }
     }
 }

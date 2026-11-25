@@ -31,3 +31,9 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Android Release Keystore & Backup (절대 Git 커밋 금지)
+android/key.properties
+android/app/upload-keystore.jks
+*.jks
+PLAY_STORE_KEY_BACKUP.txt
+
