@@ -29,6 +29,7 @@ jobs:
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.35.7'
           channel: 'stable'
           cache: true
 
@@ -60,7 +61,7 @@ jobs:
       # Play 스토어 제출용 AAB 빌드 (릴리즈 키스토어 시크릿이 등록된 경우)
       - name: Build Android App Bundle (AAB)
         if: env.HAS_RELEASE_KEYSTORE == 'true'
-        run: flutter build appbundle --release --no-tree-shake-icons --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
+        run: flutter build appbundle --release --no-tree-shake-icons --build-name=1.0.0 --build-number=${{ github.run_number }}
 
       - name: Upload AAB Artifact (Google Play)
         if: env.HAS_RELEASE_KEYSTORE == 'true'
@@ -71,7 +72,7 @@ jobs:
 
       # 테스트 설치용 APK 빌드
       - name: Build Android APK
-        run: flutter build apk --release --no-tree-shake-icons --build-name=1.0.${{ github.run_number }} --build-number=${{ github.run_number }}
+        run: flutter build apk --release --no-tree-shake-icons --build-name=1.0.0 --build-number=${{ github.run_number }}
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

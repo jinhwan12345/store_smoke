@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 
 def githubRunNumber = System.getenv("GITHUB_RUN_NUMBER")
 def computedVersionCode = githubRunNumber ? githubRunNumber.toInteger() : flutter.versionCode
-def computedVersionName = githubRunNumber ? "1.0.${githubRunNumber}" : flutter.versionName
+def computedVersionName = flutter.versionName ?: "1.0.0"
 
 android {
     namespace = "org.youthdrawer.smokefinder"
