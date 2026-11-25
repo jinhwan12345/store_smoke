@@ -20,8 +20,8 @@ def computedVersionName = githubRunNumber ? "1.0.${githubRunNumber}" : flutter.v
 
 android {
     namespace = "org.youthdrawer.smokefinder"
-    compileSdk = 35
-    ndkVersion = "25.1.8937393"
+    compileSdk = 36
+    ndkVersion = "28.0.13004108"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -34,8 +34,8 @@ android {
 
     defaultConfig {
         applicationId = "org.youthdrawer.smokefinder"
-        minSdk = flutter.minSdkVersion
-        targetSdk = 35
+        minSdk = 24
+        targetSdk = 36
         versionCode = computedVersionCode
         versionName = computedVersionName
     }
@@ -62,6 +62,9 @@ android {
             signingConfig = keystorePropertiesFile.exists()
                 ? signingConfigs.release
                 : signingConfigs.debug
+            ndk {
+                debugSymbolLevel = 'SYMBOL_TABLE'
+            }
         }
     }
 }
